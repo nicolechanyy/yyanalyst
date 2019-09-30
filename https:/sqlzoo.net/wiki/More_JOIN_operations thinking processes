@@ -1,0 +1,36 @@
+Q15 List all the people who have worked with 'Art Garfunkel'.
+
+SELECT name
+FROM casting
+JOIN actor ON casting.actorid=actor.id
+WHERE movieid IN (
+SELECT movieid FROM casting WHERE actorid IN
+(SELECT id FROM actor WHERE name='Art Garfunkel'))
+AND name NOT IN ('Art Garfunkel')
+
+
+Thinking processes when I read this quesiton:
+
+step1: 'Art Garfunkel' we only know his "name" but we want to know his "id", thus, to find out his id from "actor table"    
+How: 
+(SELECT id FROM actor WHERE name='Art Garfunkel') 
+
+step2: which movie did he work in?-we already know his actor id, now to find out his movieid from "casting table"
+How: 
+SELECT movieid FROM casting WHERE actorid IN
+(SELECT id FROM actor WHERE name='Art Garfunkel'))
+
+step3: we just wanna know other people's names, thus, we need to exclude 'Art Garfunkel'name 
+How: 
+WHERE movieid IN (step2(step1))
+AND name NOT IN ('Art Garfunkel')
+
+
+step4:join two tables in terms of "actor table" and "casting table" together so as to select the name that we want to know. 
+How: 
+SELECT name
+FROM casting
+JOIN actor ON casting.actorid=actor.id 
+
+Chinese: 为什么搜索语句中，有时还要包含多个 （select ...from ..)的原因：
+先找到'Art Garfunkel'的id 是什么， 再找他拍的电影的ID，然后剔除在电影中包含他的名字， 最后搜索出我们要的列名， （需要将两个表合并）。
