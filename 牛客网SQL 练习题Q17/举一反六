@@ -1,0 +1,65 @@
+Goal: How to use sql to select the n highest salary——individual study notes
+
+牛客网 SQL 练习题：Q17 举一反6 
+获取当前（to_date='9999-01-01'）薪水第二多的员工的emp_no以及其对应的薪水salary
+CREATE TABLE `salaries` (
+`emp_no` int(11) NOT NULL,
+`salary` int(11) NOT NULL,
+`from_date` date NOT NULL,
+`to_date` date NOT NULL,
+PRIMARY KEY (`emp_no`,`from_date`));
+
+Option1: By using the correlated SQL subquery (Pros & Cons:This solution works in all database but it runs slowest)
+SELECT emp_no, salary 
+FROM salaries s1
+WHERE 2-1 = (SELECT COUNT(DISTINCT salary) 
+FROM salaries s2 WHERE s2.salary > s1.salary)
+AND s1.to_date='9999-01-01'
+
+Option2: By using TOP keyword (Pros & Cons: This option only works in Microsoft SQL Server or MSAccess but it runs faster)
+However, this could not be runned out (牛客网）
+SELECT emp_no, TOP 1 salary 
+FROM ( SELECT DISTINCT TOP 2 salary FROM salaries ORDER BY salary DESC ) AS sa ORDER BY salary ASC
+WHERE to_date='9999-01-01'
+
+Option3: Second maximum salary using sub query and IN clause
+SELECT emp_no, MAX(salary) 
+FROM salaries
+WHERE to_date='9999-01-01' 
+AND salary NOT IN (SELECT MAX(DISTINCT salary) FROM salaries) 
+
+Option4: By using subquery and < operator instead of IN clause:
+SELECT emp_no, MAX(salary) 
+FROM salaries
+WHERE to_date='9999-01-01' 
+AND salary <(SELECT MAX(DISTINCT salary) FROM salaries)
+
+Option5: By using a SELECT LIMIT statement with an OFFSET clause in MYSQL database
+(Pros & Cons: This solution will only work in MySQL database but it might run faster than correlated query approach)
+SELECT emp_no, salary
+FROM salaries 
+WHERE to_date='9999-01-01' 
+AND salary = (SELECT Distinct salary FROM salaries ORDER BY salary DESC LIMIT 1, 1)
+
+a.解释：Explanation of OFFSET:  如果offset=1, 即跳过第一行，直接出第二行; 也可以不用offset, 则直接返还 共5行的值。
+Skipping the first record that would normally be returned and instead return the second, third, and fourth records.
+
+b.公式套用：To find the nth highest salary in MySQL without using subquery as shown below：
+SELECT salary FROM Employee  ORDER BY Salary DESC LIMIT n-1,1
+
+c.例子： 
+e.g. 2nd highest salary in MySQL without subquery:
+SELECT salary FROM Employee ORDER BY salary DESC LIMIT 1,1
+
+e.g. 3rd highest salary in MySQL using LIMIT clause:
+SELECT salary FROM Employee ORDER BY salary DESC LIMIT 2,1
+
+Option6: By using ROW_NUMBER()function in Oracle:(However, this option could not be runned out)
+SELECT emp_no, salary
+FROM ( SELECT DISTINCT salary, ROW_NUMBER() OVER (ORDER BY salary DESC) rn FROM salaries) 
+WHERE rn = 2 AND to_date='9999-01-01'
+
+Reference:
+https://javarevisited.blogspot.com/2016/01/4-ways-to-find-nth-highest-salary-in.html#ixzz628exuU29
+https://javarevisited.blogspot.com/2016/01/4-ways-to-find-nth-highest-salary-in.html
+https://www.techonthenet.com/sql/select_limit.php
